@@ -35,7 +35,5 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 
 		assertLeague(t, got, want)
 
-		// github personal token
-		// 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
 	})
 }
