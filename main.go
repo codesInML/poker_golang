@@ -1,11 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
+const dbFileName = "game.db.json"
+const PORT = "3030"
+
 func main() {
-	server := NewPlayerServer(NewInMemoryPlayerStore())
-	log.Fatal(http.ListenAndServe(":3030", server))
+	db, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
+
+	if err != nil {
+		log.Fatalf("problem opening %s, %v", dbFileName, err)
+	}
+
+	store := &FileSystemPlayerStore{db}
+	server := NewPlayerServer(store)
+
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", PORT), server); err != nil {
+		log.Fatalf("could not listen on port %s, %v", PORT, err)
+	}
 }
