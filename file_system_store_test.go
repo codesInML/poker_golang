@@ -1,13 +1,12 @@
 package main
 
 import (
-	"io"
 	"io/ioutil"
 	"os"
 	"testing"
 )
 
-func createTempFile(t testing.TB, initialData string) (io.ReadWriteSeeker, func()) {
+func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
 	t.Helper()
 
 	tempfile, err := ioutil.TempFile("", "db")
@@ -36,8 +35,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		defer cleanDatabase()
 
-		store := FileSystemPlayerStore{database}
-
+		store := NewFileSystemPlayerStore(database)
 		got := store.GetLeague()
 		want := []Player{
 			{"Ifeoluwa", 20},
@@ -59,7 +57,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		defer cleanDatabase()
 
-		store := FileSystemPlayerStore{database}
+		store := NewFileSystemPlayerStore(database)
 
 		got := store.GetPlayerScore("Ifeoluwa")
 		want := 20
@@ -73,7 +71,7 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 
 		defer cleanDatabase()
-		store := FileSystemPlayerStore{database}
+		store := NewFileSystemPlayerStore(database)
 		store.RecordWin("Ifeoluwa")
 
 		got := store.GetPlayerScore("Ifeoluwa")
@@ -89,13 +87,32 @@ func TestFileSystemStore(t *testing.T) {
 		]`)
 
 		defer cleanDatabase()
-		store := FileSystemPlayerStore{database}
+		store := NewFileSystemPlayerStore(database)
 		store.RecordWin("Oluwole")
 
 		got := store.GetPlayerScore("Oluwole")
 		want := 1
 		assertScoreEquals(t, got, want)
 	})
+}
+
+func TestTape_Write(t *testing.T) {
+	file, clean := createTempFile(t, "12345")
+	defer clean()
+
+	tape := &tape{file}
+
+	tape.Write([]byte("abc"))
+
+	file.Seek(0, 0)
+	newFileContents, _ := ioutil.ReadAll(file)
+
+	got := string(newFileContents)
+	want := "abc"
+
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
 }
 
 func assertScoreEquals(t *testing.T, got, want int) {
