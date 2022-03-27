@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	poker "golang_projects"
 	"log"
 	"net/http"
 	"os"
+
+	poker "github.com/codesInML/poker_golang"
 )
 
 const dbFileName = "game.db.json"
